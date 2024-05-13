@@ -210,6 +210,28 @@ async function * parseTar(tgzPath) {
 }
 
 
+// berry/packages/yarnpkg-core/sources/miscUtils.ts
+// Converts a Node stream into a Buffer instance
+export async function bufferStream(stream) {
+  return await new Promise((resolve, reject) => {
+    const chunks = [];
+
+    stream.on(`error`, error => {
+      reject(error);
+    });
+
+    stream.on(`data`, chunk => {
+      chunks.push(chunk);
+    });
+
+    stream.on(`end`, () => {
+      resolve(Buffer.concat(chunks));
+    });
+  });
+}
+
+
+
 //export async function extractArchiveTo(tgz, targetFs, {stripComponents = 0, prefixPath = PortablePath.dot} = {}) {
 export async function extractArchiveTo(tgzPath, targetFs, {stripComponents = 0, prefixPath = PortablePath.dot} = {}) {
   function ignore(entry) {
@@ -259,7 +281,8 @@ export async function extractArchiveTo(tgzPath, targetFs, {stripComponents = 0, 
       case `File`: {
         targetFs.mkdirpSync(ppath.dirname(mappedPath), {chmod: 0o755, utimes: [constants.SAFE_TIME, constants.SAFE_TIME]});
 
-        targetFs.writeFileSync(mappedPath, await miscUtils.bufferStream(entry ), {mode});
+        //targetFs.writeFileSync(mappedPath, await miscUtils.bufferStream(entry ), {mode});
+        targetFs.writeFileSync(mappedPath, await bufferStream(entry ), {mode});
         targetFs.utimesSync(mappedPath, constants.SAFE_TIME, constants.SAFE_TIME);
       } break;
 
