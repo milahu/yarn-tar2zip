@@ -7,7 +7,7 @@ import * as tar                                                                 
 import fs from 'fs';
 
 //import {AsyncPool, WorkerPool}                                       from './TaskPool';
-import * as miscUtils                                                          from './miscUtils.js';
+//import * as miscUtils                                                          from './miscUtils.js';
 //import {getContent as getZipWorkerSource}                                      from './worker-zip';
 
 
