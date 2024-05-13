@@ -172,10 +172,8 @@ async function main() {
   }
 
   const tgzPath = process.argv[2];
-  console.log(`reading ${tgzPath}`);
 
   const zipPath = process.argv[3];
-  console.log(`writing ${zipPath}`);
 
   const compressionLevel = (process.argv[4] == "mixed") ? null : parseInt(process.argv[4] || 0);
 
