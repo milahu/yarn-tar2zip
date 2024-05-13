@@ -12,5 +12,9 @@
   "dependencies": {
     "@yarnpkg/fslib": "^3.1.0",
     "@yarnpkg/libzip": "^3.1.0"
+  },
+  "devDependencies": {
+    "sucrase": "^3.35.0",
+    "tiny-glob": "^0.2.9"
   }
 }
