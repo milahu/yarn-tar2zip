@@ -1,0 +1,10 @@
+is the "mixed" level actually supported?
+or does an invalid value mean "level 9"?
+
+implement checksum formats of old yarn versions
+yarn 4.1.1
+yarn 3.8.2
+yarn 2.4.3
+
+the current implementation is compatible with yarn versions
+4.2.2 4.2.1 4.2.0 4.1.0 4.0.2 4.0.1
