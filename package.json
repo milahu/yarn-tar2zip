@@ -1,22 +1,15 @@
 {
-  "name": "yarnzip",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "yarn-tar2zip",
+  "version": "0.0.1",
+  "description": "convert tar archive to yarn zip archive",
+  "main": "yarn-tar2zip.js",
   "type": "module",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@yarnpkg/fslib": "^3.1.0",
     "@yarnpkg/libzip": "^3.1.0",
     "tar": "^7.1.0"
-  },
-  "devDependencies": {
-    "sucrase": "^3.35.0",
-    "tiny-glob": "^0.2.9"
   }
 }
