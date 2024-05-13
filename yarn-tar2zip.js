@@ -164,34 +164,26 @@ export async function extractArchiveTo(tgzPath, targetFs, {stripComponents = 0, 
 }
 
 async function main() {
-  //const data = {tmpFile, tgz, compressionLevel, extractBufferOpts};
-  //convertToZipWorker(data);
-
   if (process.argv.length < 4) {
     console.error(`error: missing args`);
+    console.error(`usage: node yarn-tar2zip.js tgzPath zipPath [compressionLevel prefixPath stripComponents]`);
+    console.error(`example: node yarn-tar2zip.js hello-1.2.3.tgz hello-1.2.3.zip 0 node_modules/hello 1`);
     return;
   }
 
   const tgzPath = process.argv[2];
   console.log(`reading ${tgzPath}`);
 
-  //const tmpFile = "/run/user/1000/tgzUtils.js.archive.zip";
-  const tmpFile = process.argv[3];
-  console.log(`writing ${tmpFile}`);
+  const zipPath = process.argv[3];
+  console.log(`writing ${zipPath}`);
 
-  const compressionLevel = 0;
+  const compressionLevel = (process.argv[4] == "mixed") ? null : parseInt(process.argv[4] || 0);
 
-  const zipFs = new ZipFS(tmpFile, {create: true, level: compressionLevel, stats: statUtils.makeDefaultStats()});
-
-  /*
-  // Buffers sent through Node are turned into regular Uint8Arrays
-  const tgzBuffer = Buffer.from(tgz.buffer, tgz.byteOffset, tgz.byteLength);
-  await extractArchiveTo(tgzBuffer, zipFs, extractBufferOpts);
-  */
+  const zipFs = new ZipFS(zipPath, {create: true, level: compressionLevel, stats: statUtils.makeDefaultStats()});
 
   const extractBufferOpts = {
-    prefixPath: process.argv[4],
-    stripComponents: parseInt(process.argv[5] || 0),
+    prefixPath: process.argv[5],
+    stripComponents: parseInt(process.argv[6] || 0),
   };
 
   await extractArchiveTo(tgzPath, zipFs, extractBufferOpts);
