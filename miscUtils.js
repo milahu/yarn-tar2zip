@@ -1,45 +1,45 @@
-import {PortablePath, npath, xfs} from '@yarnpkg/fslib';
+import { npath, xfs} from '@yarnpkg/fslib';
 import {UsageError}               from 'clipanion';
 import isEqual                    from 'lodash/isEqual';
 import mergeWith                  from 'lodash/mergeWith';
 import micromatch                 from 'micromatch';
-import pLimit, {Limit}            from 'p-limit';
+import pLimit, {}            from 'p-limit';
 import semver                     from 'semver';
-import {Readable, Transform}      from 'stream';
+import { Transform}      from 'stream';
 
 /**
  * @internal
  */
-export function isTaggedYarnVersion(version: string | null) {
-  return !!(semver.valid(version) && version!.match(/^[^-]+(-rc\.[0-9]+)?$/));
+export function isTaggedYarnVersion(version) {
+  return !!(semver.valid(version) && version.match(/^[^-]+(-rc\.[0-9]+)?$/));
 }
 
-export function plural(n: number, {one, more, zero = more}: {zero?: string, one: string, more: string}) {
+export function plural(n, {one, more, zero = more}) {
   return n === 0 ? zero : n === 1 ? one : more;
 }
 
-export function escapeRegExp(str: string) {
+export function escapeRegExp(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, `\\$&`);
 }
 
-export function overrideType<T>(val: unknown): asserts val is T {
+export function overrideType(val) {
 }
 
-export function assertNever(arg: never): never {
+export function assertNever(arg) {
   throw new Error(`Assertion failed: Unexpected object '${arg}'`);
 }
 
-export function validateEnum<T>(def: {[key: string]: T}, value: string): T {
+export function validateEnum(def, value) {
   const values = Object.values(def);
 
-  if (!values.includes(value as any))
+  if (!values.includes(value ))
     throw new UsageError(`Invalid value for enumeration: ${JSON.stringify(value)} (expected one of ${values.map(value => JSON.stringify(value)).join(`, `)})`);
 
-  return value as any as T;
+  return value ;
 }
 
-export function mapAndFilter<In, Out>(iterable: Iterable<In>, cb: (value: In) => Out | typeof mapAndFilterSkip): Array<Out> {
-  const output: Array<Out> = [];
+export function mapAndFilter(iterable, cb) {
+  const output = [];
 
   for (const value of iterable) {
     const out = cb(value);
@@ -54,7 +54,7 @@ export function mapAndFilter<In, Out>(iterable: Iterable<In>, cb: (value: In) =>
 const mapAndFilterSkip = Symbol();
 mapAndFilter.skip = mapAndFilterSkip;
 
-export function mapAndFind<In, Out>(iterable: Iterable<In>, cb: (value: In) => Out | typeof mapAndFindSkip): Out | undefined {
+export function mapAndFind(iterable, cb) {
   for (const value of iterable) {
     const out = cb(value);
     if (out !== mapAndFindSkip) {
@@ -68,26 +68,26 @@ export function mapAndFind<In, Out>(iterable: Iterable<In>, cb: (value: In) => O
 const mapAndFindSkip = Symbol();
 mapAndFind.skip = mapAndFindSkip;
 
-export function isIndexableObject(value: unknown): value is {[key: string]: unknown} {
+export function isIndexableObject(value) {
   return typeof value === `object` && value !== null;
 }
 
-export type MapValue<T> = T extends Map<any, infer V> ? V : never;
 
-export interface ToMapValue<T extends object> {
-  get<K extends keyof T>(key: K): T[K];
-}
 
-export type MapValueToObjectValue<T> =
-  T extends Map<infer K, infer V> ? (K extends string | number | symbol ? MapValueToObjectValue<Record<K, V>> : never)
-    : T extends ToMapValue<infer V> ? MapValueToObjectValue<V>
-      : T extends PortablePath ? PortablePath
-        : T extends object ? {[K in keyof T]: MapValueToObjectValue<T[K]>}
-          : T;
 
-export async function allSettledSafe<T>(promises: Array<Promise<T>>) {
+
+
+
+
+
+
+
+
+
+
+export async function allSettledSafe(promises) {
   const results = await Promise.allSettled(promises);
-  const values: Array<T> = [];
+  const values = [];
 
   for (const result of results) {
     if (result.status === `rejected`) {
@@ -103,7 +103,7 @@ export async function allSettledSafe<T>(promises: Array<Promise<T>>) {
 /**
  * Converts Maps to indexable objects recursively.
  */
-export function convertMapsToIndexableObjects<T>(arg: T): MapValueToObjectValue<T> {
+export function convertMapsToIndexableObjects(arg) {
   if (arg instanceof Map)
     arg = Object.fromEntries(arg);
 
@@ -117,15 +117,15 @@ export function convertMapsToIndexableObjects<T>(arg: T): MapValueToObjectValue<
     }
   }
 
-  return arg as MapValueToObjectValue<T>;
+  return arg ;
 }
 
-export interface GetSetMap<K, V> {
-  get(k: K): V | undefined;
-  set(k: K, v: V): void;
-}
 
-export function getFactoryWithDefault<K, T>(map: GetSetMap<K, T>, key: K, factory: () => T) {
+
+
+
+
+export function getFactoryWithDefault(map, key, factory) {
   let value = map.get(key);
 
   if (typeof value === `undefined`)
@@ -134,7 +134,7 @@ export function getFactoryWithDefault<K, T>(map: GetSetMap<K, T>, key: K, factor
   return value;
 }
 
-export function getArrayWithDefault<K, T>(map: GetSetMap<K, Array<T>>, key: K) {
+export function getArrayWithDefault(map, key) {
   let value = map.get(key);
 
   if (typeof value === `undefined`)
@@ -143,20 +143,20 @@ export function getArrayWithDefault<K, T>(map: GetSetMap<K, Array<T>>, key: K) {
   return value;
 }
 
-export function getSetWithDefault<K, T>(map: GetSetMap<K, Set<T>>, key: K) {
+export function getSetWithDefault(map, key) {
   let value = map.get(key);
 
   if (typeof value === `undefined`)
-    map.set(key, value = new Set<T>());
+    map.set(key, value = new Set());
 
   return value;
 }
 
-export function getMapWithDefault<K, MK, MV>(map: GetSetMap<K, Map<MK, MV>>, key: K) {
+export function getMapWithDefault(map, key) {
   let value = map.get(key);
 
   if (typeof value === `undefined`)
-    map.set(key, value = new Map<MK, MV>());
+    map.set(key, value = new Map());
 
   return value;
 }
@@ -164,7 +164,7 @@ export function getMapWithDefault<K, MK, MV>(map: GetSetMap<K, Map<MK, MV>>, key
 // Executes a chunk of code and calls a cleanup function once it returns (even
 // if it throws an exception)
 
-export async function releaseAfterUseAsync<T>(fn: () => Promise<T>, cleanup?: (() => any) | null) {
+export async function releaseAfterUseAsync(fn, cleanup) {
   if (cleanup == null)
     return await fn();
 
@@ -178,7 +178,7 @@ export async function releaseAfterUseAsync<T>(fn: () => Promise<T>, cleanup?: ((
 // Executes a chunk of code but slightly modify its exception message if it
 // throws something
 
-export async function prettifyAsyncErrors<T>(fn: () => Promise<T>, update: (message: string) => string) {
+export async function prettifyAsyncErrors(fn, update) {
   try {
     return await fn();
   } catch (error) {
@@ -189,7 +189,7 @@ export async function prettifyAsyncErrors<T>(fn: () => Promise<T>, update: (mess
 
 // Same thing but synchronous
 
-export function prettifySyncErrors<T>(fn: () => T, update: (message: string) => string) {
+export function prettifySyncErrors(fn, update) {
   try {
     return fn();
   } catch (error) {
@@ -200,9 +200,9 @@ export function prettifySyncErrors<T>(fn: () => T, update: (message: string) => 
 
 // Converts a Node stream into a Buffer instance
 
-export async function bufferStream(stream: Readable) {
-  return await new Promise<Buffer>((resolve, reject) => {
-    const chunks: Array<Buffer> = [];
+export async function bufferStream(stream) {
+  return await new Promise((resolve, reject) => {
+    const chunks = [];
 
     stream.on(`error`, error => {
       reject(error);
@@ -221,51 +221,51 @@ export async function bufferStream(stream: Readable) {
 // A stream implementation that buffers a stream to send it all at once
 
 export class BufferStream extends Transform {
-  private readonly chunks: Array<Buffer> = [];
+    chunks = [];
 
-  _transform(chunk: Buffer, encoding: string, cb: any) {
+  _transform(chunk, encoding, cb) {
     if (encoding !== `buffer` || !Buffer.isBuffer(chunk))
       throw new Error(`Assertion failed: BufferStream only accept buffers`);
 
-    this.chunks.push(chunk as Buffer);
+    this.chunks.push(chunk );
 
     cb(null, null);
   }
 
-  _flush(cb: any) {
+  _flush(cb) {
     cb(null, Buffer.concat(this.chunks));
   }
 }
 
-export type Deferred<T = void> = {
-  promise: Promise<T>;
-  resolve: (val: T) => void;
-  reject: (err: Error) => void;
-};
 
-export function makeDeferred<T = void>(): Deferred<T> {
-  let resolve: (val: T) => void;
-  let reject: (err: Error) => void;
 
-  const promise = new Promise<T>((resolveFn, rejectFn) => {
+
+
+
+
+export function makeDeferred() {
+  let resolve;
+  let reject;
+
+  const promise = new Promise((resolveFn, rejectFn) => {
     resolve = resolveFn;
     reject = rejectFn;
   });
 
-  return {promise, resolve: resolve!, reject: reject!};
+  return {promise, resolve: resolve, reject: reject};
 }
 
 export class AsyncActions {
-  private deferred = new Map<string, Deferred>();
-  private promises = new Map<string, Promise<void>>();
+   deferred = new Map();
+   promises = new Map();
 
-  private limit: Limit;
+   limit;
 
-  constructor(limit: number) {
+  constructor(limit) {
     this.limit = pLimit(limit);
   }
 
-  set(key: string, factory: () => Promise<void>) {
+  set(key, factory) {
     let deferred = this.deferred.get(key);
     if (typeof deferred === `undefined`)
       this.deferred.set(key, deferred = makeDeferred());
@@ -275,18 +275,18 @@ export class AsyncActions {
 
     promise.then(() => {
       if (this.promises.get(key) === promise) {
-        deferred!.resolve();
+        deferred.resolve();
       }
     }, err => {
       if (this.promises.get(key) === promise) {
-        deferred!.reject(err);
+        deferred.reject(err);
       }
     });
 
     return deferred.promise;
   }
 
-  reduce(key: string, factory: (action: Promise<void>) => Promise<void>) {
+  reduce(key, factory) {
     const promise = this.promises.get(key) ?? Promise.resolve();
     this.set(key, () => factory(promise));
   }
@@ -299,17 +299,17 @@ export class AsyncActions {
 // A stream implementation that prints a message if nothing was output
 
 export class DefaultStream extends Transform {
-  private readonly ifEmpty: Buffer;
+    ifEmpty;
 
-  public active = true;
+   active = true;
 
-  constructor(ifEmpty: Buffer = Buffer.alloc(0)) {
+  constructor(ifEmpty = Buffer.alloc(0)) {
     super();
 
     this.ifEmpty = ifEmpty;
   }
 
-  _transform(chunk: Buffer, encoding: string, cb: any) {
+  _transform(chunk, encoding, cb) {
     if (encoding !== `buffer` || !Buffer.isBuffer(chunk))
       throw new Error(`Assertion failed: DefaultStream only accept buffers`);
 
@@ -317,7 +317,7 @@ export class DefaultStream extends Transform {
     cb(null, chunk);
   }
 
-  _flush(cb: any) {
+  _flush(cb) {
     if (this.active && this.ifEmpty.length > 0) {
       cb(null, this.ifEmpty);
     } else {
@@ -330,16 +330,16 @@ export class DefaultStream extends Transform {
 // code that simply throws when called. It's all fine and dandy in the context
 // of a web application, but is quite annoying when working with Node projects!
 
-const realRequire: NodeRequire = eval(`require`);
+const realRequire = eval(`require`);
 
-function dynamicRequireNode(path: string) {
+function dynamicRequireNode(path) {
   return realRequire(npath.fromPortablePath(path));
 }
 
 /**
  * Requires a module without using the module cache
  */
-function dynamicRequireNoCache(path: string) {
+function dynamicRequireNoCache(path) {
   const physicalPath = npath.fromPortablePath(path);
 
   const currentCacheEntry = realRequire.cache[physicalPath];
@@ -349,9 +349,9 @@ function dynamicRequireNoCache(path: string) {
   try {
     result = dynamicRequireNode(physicalPath);
 
-    const freshCacheEntry = realRequire.cache[physicalPath]!;
+    const freshCacheEntry = realRequire.cache[physicalPath];
 
-    const dynamicModule = eval(`module`) as NodeModule;
+    const dynamicModule = eval(`module`) ;
     const freshCacheIndex = dynamicModule.children.indexOf(freshCacheEntry);
 
     if (freshCacheIndex !== -1) {
@@ -364,15 +364,15 @@ function dynamicRequireNoCache(path: string) {
   return result;
 }
 
-const dynamicRequireFsTimeCache = new Map<PortablePath, {
-  mtime: number;
-  instance: any;
-}>();
+const dynamicRequireFsTimeCache = new Map
+
+
+();
 
 /**
  * Requires a module without using the cache if it has changed since the last time it was loaded
  */
-function dynamicRequireFsTime(path: PortablePath) {
+function dynamicRequireFsTime(path) {
   const cachedInstance = dynamicRequireFsTimeCache.get(path);
   const stat = xfs.statSync(path);
 
@@ -384,21 +384,21 @@ function dynamicRequireFsTime(path: PortablePath) {
   return instance;
 }
 
-export enum CachingStrategy {
-  NoCache,
-  FsTime,
-  Node,
-}
+export var CachingStrategy; (function (CachingStrategy) {
+  const NoCache = 0; CachingStrategy[CachingStrategy["NoCache"] = NoCache] = "NoCache";
+  const FsTime = NoCache + 1; CachingStrategy[CachingStrategy["FsTime"] = FsTime] = "FsTime";
+  const Node = FsTime + 1; CachingStrategy[CachingStrategy["Node"] = Node] = "Node";
+})(CachingStrategy || (CachingStrategy = {}));
 
-export function dynamicRequire(path: string, opts?: {cachingStrategy?: CachingStrategy}): any;
-export function dynamicRequire(path: PortablePath, opts: {cachingStrategy: CachingStrategy.FsTime}): any;
-export function dynamicRequire(path: string | PortablePath, {cachingStrategy = CachingStrategy.Node}: {cachingStrategy?: CachingStrategy} = {}) {
+
+
+export function dynamicRequire(path, {cachingStrategy = CachingStrategy.Node} = {}) {
   switch (cachingStrategy) {
     case CachingStrategy.NoCache:
       return dynamicRequireNoCache(path);
 
     case CachingStrategy.FsTime:
-      return dynamicRequireFsTime(path as PortablePath);
+      return dynamicRequireFsTime(path );
 
     case CachingStrategy.Node:
       return dynamicRequireNode(path);
@@ -418,13 +418,13 @@ export function dynamicRequire(path: string | PortablePath, {cachingStrategy = C
 // predicate because sortMap caches the result of the mappers in such a way that
 // they are guaranteed to be executed exactly once for each element.
 
-export function sortMap<T>(values: Iterable<T>, mappers: ((value: T) => string) | Array<(value: T) => string>) {
+export function sortMap(values, mappers) {
   const asArray = Array.from(values);
 
   if (!Array.isArray(mappers))
     mappers = [mappers];
 
-  const stringified: Array<Array<string>> = [];
+  const stringified = [];
 
   for (const mapper of mappers)
     stringified.push(asArray.map(value => mapper(value)));
@@ -455,7 +455,7 @@ export function sortMap<T>(values: Iterable<T>, mappers: ((value: T) => string) 
  *
  * @returns A `string` representing a regular expression or `null` if no glob patterns are provided
  */
-export function buildIgnorePattern(ignorePatterns: Array<string>) {
+export function buildIgnorePattern(ignorePatterns) {
   if (ignorePatterns.length === 0)
     return null;
 
@@ -467,7 +467,7 @@ export function buildIgnorePattern(ignorePatterns: Array<string>) {
   }).join(`|`);
 }
 
-export function replaceEnvVariables(value: string, {env}: {env: {[key: string]: string | undefined}}) {
+export function replaceEnvVariables(value, {env}) {
   const regex = /\${(?<variableName>[\d\w_]+)(?<colon>:)?(?:-(?<fallback>[^}]*))?}/g;
 
   return value.replace(regex, (...args) => {
@@ -487,7 +487,7 @@ export function replaceEnvVariables(value: string, {env}: {env: {[key: string]: 
   });
 }
 
-export function parseBoolean(value: unknown): boolean {
+export function parseBoolean(value) {
   switch (value) {
     case `true`:
     case `1`:
@@ -509,14 +509,14 @@ export function parseBoolean(value: unknown): boolean {
   }
 }
 
-export function parseOptionalBoolean(value: unknown): boolean | undefined {
+export function parseOptionalBoolean(value) {
   if (typeof value === `undefined`)
     return value;
 
   return parseBoolean(value);
 }
 
-export function tryParseOptionalBoolean(value: unknown): boolean | undefined | null {
+export function tryParseOptionalBoolean(value) {
   try {
     return parseOptionalBoolean(value);
   } catch {
@@ -524,19 +524,19 @@ export function tryParseOptionalBoolean(value: unknown): boolean | undefined | n
   }
 }
 
-export type FilterKeys<T extends {}, Filter> = {
-  [K in keyof T]: T[K] extends Filter ? K : never;
-}[keyof T];
 
-export function isPathLike(value: string): boolean {
+
+
+
+export function isPathLike(value) {
   if (npath.isAbsolute(value) || value.match(/^(\.{1,2}|~)\//))
     return true;
   return false;
 }
 
-type MergeObjects<T extends Array<unknown>, Accumulator> = T extends [infer U, ...infer Rest]
-  ? MergeObjects<Rest, Accumulator & U>
-  : Accumulator;
+
+
+
 
 /**
  * Merges multiple objects into the target argument.
@@ -548,14 +548,14 @@ type MergeObjects<T extends Array<unknown>, Accumulator> = T extends [infer U, .
  * @see toMerged for a version that doesn't mutate the target argument
  *
  */
-export function mergeIntoTarget<T extends object, S extends Array<object>>(target: T, ...sources: S): MergeObjects<S, T> {
+export function mergeIntoTarget(target, ...sources) {
   // We need to wrap everything in an object because otherwise lodash fails to merge 2 top-level arrays
-  const wrap = <T>(value: T) => ({value});
+  const wrap = (value) => ({value});
 
   const wrappedTarget = wrap(target);
   const wrappedSources = sources.map(source => wrap(source));
 
-  const {value} = mergeWith(wrappedTarget, ...wrappedSources, (targetValue: unknown, sourceValue: unknown) => {
+  const {value} = mergeWith(wrappedTarget, ...wrappedSources, (targetValue, sourceValue) => {
     // We need to preserve comments in custom Array classes such as comment-json's `CommentArray`, so we can't use spread or `Set`s
     if (Array.isArray(targetValue) && Array.isArray(sourceValue)) {
       for (const sourceItem of sourceValue) {
@@ -578,12 +578,12 @@ export function mergeIntoTarget<T extends object, S extends Array<object>>(targe
  *
  * Custom classes are not supported (i.e. comment-json's comments will be lost).
  */
-export function toMerged<S extends Array<object>>(...sources: S): MergeObjects<S, {}> {
+export function toMerged(...sources) {
   return mergeIntoTarget({}, ...sources);
 }
 
-export function groupBy<T extends Record<string, any>, K extends keyof T>(items: Iterable<T>, key: K): {[V in T[K]]?: Array<Extract<T, {[_ in K]: V}>>} {
-  const groups: Record<string, any> = Object.create(null);
+export function groupBy(items, key) {
+  const groups = Object.create(null);
 
   for (const item of items) {
     const groupKey = item[key];
@@ -595,6 +595,6 @@ export function groupBy<T extends Record<string, any>, K extends keyof T>(items:
   return groups;
 }
 
-export function parseInt(val: string | number) {
+export function parseInt(val) {
   return typeof val === `string` ? Number.parseInt(val, 10) : val;
 }
