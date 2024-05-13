@@ -14,7 +14,7 @@ import fs from 'fs';
 
 
 
-console.log("tar", tar);
+//console.log("tar", tar);
 
 
 
@@ -302,7 +302,7 @@ async function main() {
   //const data = {tmpFile, tgz, compressionLevel, extractBufferOpts};
   //convertToZipWorker(data);
 
-  if (process.argv.length != 4) {
+  if (process.argv.length < 4) {
     console.error(`error: missing args`);
     return;
   }
@@ -324,7 +324,10 @@ async function main() {
   await extractArchiveTo(tgzBuffer, zipFs, extractBufferOpts);
   */
 
-  const extractBufferOpts = {};
+  const extractBufferOpts = {
+    prefixPath: process.argv[4],
+    stripComponents: parseInt(process.argv[5] || 0),
+  };
 
   await extractArchiveTo(tgzPath, zipFs, extractBufferOpts);
 
