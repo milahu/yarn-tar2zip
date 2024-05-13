@@ -46,3 +46,10 @@ export async function convertToZip(tgz, opts = {}) {
   return new ZipFS(tmpFile, {level: opts.compressionLevel});
 }
 
+
+async function main() {
+  const dst = process.argv[2];
+  console.log("dst", dst);
+}
+
+main();
