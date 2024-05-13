@@ -1,146 +1,14 @@
-//import { nodeUtils}                                              from '@yarnpkg/core';
 import { PortablePath, NodeFS, ppath, xfs, npath, constants, statUtils} from '@yarnpkg/fslib';
 import { ZipFS}                                                 from '@yarnpkg/libzip';
 import {PassThrough,}                                                 from 'stream';
-//import tar                                                                     from 'tar';
 import * as tar                                                                     from 'tar';
 import fs from 'fs';
-
-//import {AsyncPool, WorkerPool}                                       from './TaskPool';
-//import * as miscUtils                                                          from './miscUtils.js';
-//import {getContent as getZipWorkerSource}                                      from './worker-zip';
-
-
-
-
-
-//console.log("tar", tar);
-
-
-
-
-function createTaskPool(poolMode, poolSize) {
-  switch (poolMode) {
-    case `async`:
-      return new AsyncPool(convertToZipWorker, {poolSize});
-
-    case `workers`:
-      return new WorkerPool(getZipWorkerSource(), {poolSize});
-
-    default: {
-      throw new Error(`Assertion failed: Unknown value ${poolMode} for taskPoolMode`);
-    }
-  }
-}
-
-let defaultWorkerPool;
-
-export function getDefaultTaskPool() {
-  if (typeof defaultWorkerPool === `undefined`)
-    defaultWorkerPool = createTaskPool(`workers`, nodeUtils.availableParallelism());
-
-  return defaultWorkerPool;
-}
-
-const workerPools = new WeakMap();
-
-export function getTaskPoolForConfiguration(configuration) {
-  if (typeof configuration === `undefined`)
-    return getDefaultTaskPool();
-
-  return miscUtils.getFactoryWithDefault(workerPools, configuration, () => {
-    const poolMode = configuration.get(`taskPoolMode`);
-    const poolSize = configuration.get(`taskPoolConcurrency`);
-
-    switch (poolMode) {
-      case `async`:
-        return new AsyncPool(convertToZipWorker, {poolSize});
-
-      case `workers`:
-        return new WorkerPool(getZipWorkerSource(), {poolSize});
-
-      default: {
-        throw new Error(`Assertion failed: Unknown value ${poolMode} for taskPoolMode`);
-      }
-    }
-  });
-}
-
-export async function convertToZipWorker(data) {
-  const {tmpFile, tgz, compressionLevel, extractBufferOpts} = data;
-
-  const zipFs = new ZipFS(tmpFile, {create: true, level: compressionLevel, stats: statUtils.makeDefaultStats()});
-
-  // Buffers sent through Node are turned into regular Uint8Arrays
-  //const tgzBuffer = Buffer.from(tgz.buffer, tgz.byteOffset, tgz.byteLength);
-  const tgzBuffer = 
-
-  await extractArchiveTo(tgzBuffer, zipFs, extractBufferOpts);
-
-  zipFs.saveAndClose();
-
-  return tmpFile;
-}
-
-
-
-
-
-
-
-
-export async function makeArchiveFromDirectory(source, {baseFs = new NodeFS(), prefixPath = PortablePath.root, compressionLevel, inMemory = false} = {}) {
-  let zipFs;
-  if (inMemory) {
-    zipFs = new ZipFS(null, {level: compressionLevel});
-  } else {
-    const tmpFolder = await xfs.mktempPromise();
-    const tmpFile = ppath.join(tmpFolder, `archive.zip`);
-
-    zipFs = new ZipFS(tmpFile, {create: true, level: compressionLevel});
-  }
-
-  const target = ppath.resolve(PortablePath.root, prefixPath);
-  await zipFs.copyPromise(target, source, {baseFs, stableTime: true, stableSort: true});
-
-  return zipFs;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-export async function convertToZip(tgz, opts = {}) {
-  const tmpFolder = await xfs.mktempPromise();
-  const tmpFile = ppath.join(tmpFolder, `archive.zip`);
-
-  const compressionLevel = opts.compressionLevel
-    ?? opts.configuration?.get(`compressionLevel`)
-    ?? `mixed`;
-
-  const extractBufferOpts = {
-    prefixPath: opts.prefixPath,
-    stripComponents: opts.stripComponents,
-  };
-
-  const taskPool = opts.taskPool ?? getTaskPoolForConfiguration(opts.configuration);
-  await taskPool.run({tmpFile, tgz, compressionLevel, extractBufferOpts});
-
-  return new ZipFS(tmpFile, {level: opts.compressionLevel});
-}
 
 // https://betterprogramming.pub/a-memory-friendly-way-of-reading-files-in-node-js-a45ad0cc7bb6
 function readBytes(fd, sharedBuffer) {
     return new Promise((resolve, reject) => {
         fs.read(
-            fd, 
+            fd,
             sharedBuffer,
             0,
             sharedBuffer.length,
@@ -209,7 +77,6 @@ async function * parseTar(tgzPath) {
   }
 }
 
-
 // berry/packages/yarnpkg-core/sources/miscUtils.ts
 // Converts a Node stream into a Buffer instance
 export async function bufferStream(stream) {
@@ -229,8 +96,6 @@ export async function bufferStream(stream) {
     });
   });
 }
-
-
 
 //export async function extractArchiveTo(tgz, targetFs, {stripComponents = 0, prefixPath = PortablePath.dot} = {}) {
 export async function extractArchiveTo(tgzPath, targetFs, {stripComponents = 0, prefixPath = PortablePath.dot} = {}) {
