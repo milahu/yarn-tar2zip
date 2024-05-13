@@ -1,18 +1,20 @@
-import { nodeUtils}                                              from '@yarnpkg/core';
+//import { nodeUtils}                                              from '@yarnpkg/core';
 import { PortablePath, NodeFS, ppath, xfs, npath, constants, statUtils} from '@yarnpkg/fslib';
 import { ZipFS}                                                 from '@yarnpkg/libzip';
 import {PassThrough,}                                                 from 'stream';
-import tar                                                                     from 'tar';
+//import tar                                                                     from 'tar';
+import * as tar                                                                     from 'tar';
+import fs from 'fs';
 
-import {AsyncPool, WorkerPool}                                       from './TaskPool';
-import * as miscUtils                                                          from './miscUtils';
-import {getContent as getZipWorkerSource}                                      from './worker-zip';
-
- 
-
-
+//import {AsyncPool, WorkerPool}                                       from './TaskPool';
+import * as miscUtils                                                          from './miscUtils.js';
+//import {getContent as getZipWorkerSource}                                      from './worker-zip';
 
 
+
+
+
+console.log("tar", tar);
 
 
 
@@ -70,7 +72,9 @@ export async function convertToZipWorker(data) {
   const zipFs = new ZipFS(tmpFile, {create: true, level: compressionLevel, stats: statUtils.makeDefaultStats()});
 
   // Buffers sent through Node are turned into regular Uint8Arrays
-  const tgzBuffer = Buffer.from(tgz.buffer, tgz.byteOffset, tgz.byteLength);
+  //const tgzBuffer = Buffer.from(tgz.buffer, tgz.byteOffset, tgz.byteLength);
+  const tgzBuffer = 
+
   await extractArchiveTo(tgzBuffer, zipFs, extractBufferOpts);
 
   zipFs.saveAndClose();
@@ -132,9 +136,47 @@ export async function convertToZip(tgz, opts = {}) {
   return new ZipFS(tmpFile, {level: opts.compressionLevel});
 }
 
-async function * parseTar(tgz) {
+// https://betterprogramming.pub/a-memory-friendly-way-of-reading-files-in-node-js-a45ad0cc7bb6
+function readBytes(fd, sharedBuffer) {
+    return new Promise((resolve, reject) => {
+        fs.read(
+            fd, 
+            sharedBuffer,
+            0,
+            sharedBuffer.length,
+            null,
+            (err) => {
+                if(err) { return reject(err); }
+                resolve();
+            }
+        );
+    });
+}
+
+// https://betterprogramming.pub/a-memory-friendly-way-of-reading-files-in-node-js-a45ad0cc7bb6
+async function* generateChunks(filePath, size) {
+    const sharedBuffer = Buffer.alloc(size);
+    const stats = fs.statSync(filePath); // file details
+    const fd = fs.openSync(filePath); // file descriptor
+    let bytesRead = 0; // how many bytes were read
+    let end = size;
+
+    for(let i = 0; i < Math.ceil(stats.size / size); i++) {
+        await readBytes(fd, sharedBuffer);
+        bytesRead = (i + 1) * size;
+        if(bytesRead > stats.size) {
+           // When we reach the end of file,
+           // we have to calculate how many bytes were actually read
+           end = size - (bytesRead - stats.size);
+        }
+        yield sharedBuffer.slice(0, end);
+    }
+}
+
+//async function * parseTar(tgz) {
+async function * parseTar(tgzPath) {
   // @ts-expect-error - Types are wrong about what this function returns
-  const parser = new tar.Parse();
+  const parser = new tar.Parser();
 
   const passthrough = new PassThrough({objectMode: true, autoDestroy: true, emitClose: true});
 
@@ -152,7 +194,13 @@ async function * parseTar(tgz) {
     }
   });
 
-  parser.end(tgz);
+  const CHUNK_SIZE = 10000000; // 10MB
+
+  //parser.end(tgz);
+  for await(const chunk of generateChunks(tgzPath, CHUNK_SIZE)) {
+    parser.write(chunk);
+  }
+  parser.end();
 
   for await (const entry of passthrough) {
     const it = entry ;
@@ -161,7 +209,9 @@ async function * parseTar(tgz) {
   }
 }
 
-export async function extractArchiveTo(tgz, targetFs, {stripComponents = 0, prefixPath = PortablePath.dot} = {}) {
+
+//export async function extractArchiveTo(tgz, targetFs, {stripComponents = 0, prefixPath = PortablePath.dot} = {}) {
+export async function extractArchiveTo(tgzPath, targetFs, {stripComponents = 0, prefixPath = PortablePath.dot} = {}) {
   function ignore(entry) {
     // Disallow absolute paths; might be malicious (ex: /etc/passwd)
     if (entry.path[0] === `/`)
@@ -179,7 +229,8 @@ export async function extractArchiveTo(tgz, targetFs, {stripComponents = 0, pref
     return false;
   }
 
-  for await (const entry of parseTar(tgz)) {
+  //for await (const entry of parseTar(tgz)) {
+  for await (const entry of parseTar(tgzPath)) {
     if (ignore(entry))
       continue;
 
@@ -223,3 +274,38 @@ export async function extractArchiveTo(tgz, targetFs, {stripComponents = 0, pref
 
   return targetFs;
 }
+
+async function main() {
+  //const data = {tmpFile, tgz, compressionLevel, extractBufferOpts};
+  //convertToZipWorker(data);
+
+  if (process.argv.length != 4) {
+    console.error(`error: missing args`);
+    return;
+  }
+
+  const tgzPath = process.argv[2];
+  console.log(`reading ${tgzPath}`);
+
+  //const tmpFile = "/run/user/1000/tgzUtils.js.archive.zip";
+  const tmpFile = process.argv[3];
+  console.log(`writing ${tmpFile}`);
+
+  const compressionLevel = 0;
+
+  const zipFs = new ZipFS(tmpFile, {create: true, level: compressionLevel, stats: statUtils.makeDefaultStats()});
+
+  /*
+  // Buffers sent through Node are turned into regular Uint8Arrays
+  const tgzBuffer = Buffer.from(tgz.buffer, tgz.byteOffset, tgz.byteLength);
+  await extractArchiveTo(tgzBuffer, zipFs, extractBufferOpts);
+  */
+
+  const extractBufferOpts = {};
+
+  await extractArchiveTo(tgzPath, zipFs, extractBufferOpts);
+
+  zipFs.saveAndClose();
+}
+
+main();
