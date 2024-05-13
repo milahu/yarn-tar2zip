@@ -13,21 +13,21 @@ berry/packages/plugin-npm/sources/NpmHttpFetcher.ts:    return await tgzUtils.co
 berry/packages/plugin-npm/sources/NpmSemverFetcher.ts:    return await tgzUtils.convertToZip(sourceBuffer, {
 */
 
-import {FakeFS, PortablePath, NodeFS, ppath, xfs, npath, constants, statUtils} from '@yarnpkg/fslib';
-import {ZipCompression, ZipFS}                                                 from '@yarnpkg/libzip';
+import { ppath, xfs,} from '@yarnpkg/fslib';
+import { ZipFS}                                                 from '@yarnpkg/libzip';
 
-export interface ExtractBufferOptions {
-  prefixPath?: PortablePath;
-  stripComponents?: number;
-}
 
-export interface ConvertToZipOptions extends ExtractBufferOptions {
-  configuration?: Configuration;
-  compressionLevel?: ZipCompression;
-  taskPool?: ZipWorkerPool;
-}
 
-export async function convertToZip(tgz: Buffer, opts: ConvertToZipOptions = {}) {
+
+
+
+
+
+
+
+
+
+export async function convertToZip(tgz, opts = {}) {
   const tmpFolder = await xfs.mktempPromise();
   const tmpFile = ppath.join(tmpFolder, `archive.zip`);
 
@@ -35,7 +35,7 @@ export async function convertToZip(tgz: Buffer, opts: ConvertToZipOptions = {}) 
     ?? opts.configuration?.get(`compressionLevel`)
     ?? `mixed`;
 
-  const extractBufferOpts: ExtractBufferOptions = {
+  const extractBufferOpts = {
     prefixPath: opts.prefixPath,
     stripComponents: opts.stripComponents,
   };
